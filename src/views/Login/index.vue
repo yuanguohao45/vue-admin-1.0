@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import service from "@/utils/request";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import {
   stripscript,
@@ -44,6 +45,7 @@ import {
   validatePass,
   validateVCode
 } from "@/utils/validate";
+
 export default {
   name: "Login",
   setup(props, context) {
