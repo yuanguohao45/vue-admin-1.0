@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import {
   stripscript,
   validateEmail,
@@ -45,9 +46,10 @@ import {
 } from "@/utils/validate";
 export default {
   name: "Login",
-  data() {
+  setup(props, context) {
+    /* 声明数据 */
     // 验证用户名
-    var validateUserName = (rule, value, callback) => {
+    const validateUserName = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入用户名！"));
       } else if (validateEmail(value)) {
@@ -57,9 +59,9 @@ export default {
       }
     };
     // 验证密码
-    var validatePassword = (rule, value, callback) => {
-      this.ruleForm.password = stripscript(value);
-      value = this.ruleForm.password;
+    const validatePassword = (rule, value, callback) => {
+      ruleForm.password = stripscript(value);
+      value = ruleForm.password;
       if (value === "") {
         callback(new Error("请输入密码！"));
       } else if (validatePass(value)) {
@@ -69,23 +71,23 @@ export default {
       }
     };
     // 验证重复密码
-    var validatePasswords = (rule, value, callback) => {
+    const validatePasswords = (rule, value, callback) => {
       // 考虑性能v-show需做特殊处理
-      if (this.model == "login") {
+      if (model.value == "login") {
         callback();
       }
-      this.ruleForm.passwords = stripscript(value);
-      value = this.ruleForm.passwords;
+      ruleForm.passwords = stripscript(value);
+      value = ruleForm.passwords;
       if (value === "") {
         callback(new Error("请再次输入密码！"));
-      } else if (value != this.ruleForm.password) {
+      } else if (value != ruleForm.password) {
         callback(new Error("两次输入的密码不一致！"));
       } else {
         callback();
       }
     };
     // 验证验证码
-    var validateCode = (rule, value, callback) => {
+    const validateCode = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入验证码！"));
       } else if (validateVCode(value)) {
@@ -94,37 +96,35 @@ export default {
         callback();
       }
     };
-    return {
-      menuTab: [
-        { txt: "登录", type: "login", current: true }, // key值id没有可以自动生成
-        { txt: "注册", type: "register", current: false }
-      ],
-      model: "login",
-      ruleForm: {
-        username: "",
-        password: "",
-        passwords: "",
-        code: ""
-      },
-      rules: {
-        username: [{ validator: validateUserName, trigger: "blur" }],
-        password: [{ validator: validatePassword, trigger: "blur" }],
-        passwords: [{ validator: validatePasswords, trigger: "blur" }],
-        code: [{ validator: validateCode, trigger: "blur" }]
-      }
-    };
-  },
-  created() {},
-  mounted() {},
-  methods: {
-    toggleMenu(data) {
-      this.menuTab.forEach(e => {
+    // 这里放置data数据、生命周期、自定义的函数
+    const menuTab = reactive([
+      { txt: "登录", type: "login", current: true }, // key值id没有可以自动生成
+      { txt: "注册", type: "register", current: false }
+    ]);
+    const model = ref("login");
+    const ruleForm = reactive({
+      username: "",
+      password: "",
+      passwords: "",
+      code: ""
+    });
+    const rules = reactive({
+      username: [{ validator: validateUserName, trigger: "blur" }],
+      password: [{ validator: validatePassword, trigger: "blur" }],
+      passwords: [{ validator: validatePasswords, trigger: "blur" }],
+      code: [{ validator: validateCode, trigger: "blur" }]
+    });
+    // 生命周期
+    onMounted(() => {});
+    // 函数声明
+    const toggleMenu = data => {
+      menuTab.forEach(e => {
         e.current = !e.current;
       });
-      this.model = data.type;
-    },
-    submitForm(formName) {
-      this.$refs[formName].validate(valid => {
+      model.value = data.type;
+    };
+    const submitForm = formName => {
+      context.refs[formName].validate(valid => {
         if (valid) {
           alert("submit!");
         } else {
@@ -132,10 +132,17 @@ export default {
           return false;
         }
       });
-    },
-    resetForm(formName) {
-      this.$refs[formName].resetFields();
-    }
+    };
+
+    return {
+      menuTab,
+      model,
+      ruleForm,
+      rules,
+
+      toggleMenu,
+      submitForm
+    };
   }
 };
 </script>
