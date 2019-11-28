@@ -5,7 +5,7 @@ const BASE_URL = process.env.NODE_ENV === "production" ? "" : "/api";
 // 创建axios,重新赋值
 const service = axios.create({
   baseURL: BASE_URL,
-  timeout: 1000
+  timeout: 15000
 });
 
 // 添加请求拦截器

@@ -13,7 +13,7 @@
           <label class="label" for="password">密码</label>
           <el-input id="password" type="text" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
-        <el-form-item prop="passwords" class="item-form" v-show="model=='register'">
+        <el-form-item prop="passwords" class="item-form" v-show="tonixObj.model=='register'">
           <label class="label" for="passwords">重复密码</label>
           <el-input id="passwords" type="text" v-model="ruleForm.passwords" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
@@ -21,15 +21,15 @@
           <label class="label" for="code">验证码</label>
           <el-row :gutter="10">
             <el-col :span="15">
-              <el-input id="code" v-model.number="ruleForm.code" minlength="6" maxlength="6"></el-input>
+              <el-input id="code" v-model="ruleForm.code" minlength="6" maxlength="6"></el-input>
             </el-col>
             <el-col :span="9">
-              <el-button type="success" class="block" @click="getSms">获取验证码</el-button>
+              <el-button type="success" class="block" :disabled="tonixObj.showCodeBtn" @click="getSms">{{tonixObj.showCodeBtnText}}</el-button>
             </el-col>
           </el-row>
         </el-form-item>
         <el-form-item>
-          <el-button type="danger" :disabled="showBtn" @click="submitForm('ruleForm')" class="login-btn block">{{model=='login'?'登录':'注册'}}</el-button>
+          <el-button type="danger" :disabled="tonixObj.showBtn" @click="submitForm('ruleForm')" class="login-btn block">{{tonixObj.model=='login'?'登录':'注册'}}</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { GetSms } from "@/api/login";
+import { GetSms, Register, Login } from "@/api/login";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import {
   stripscript,
@@ -84,7 +84,7 @@ export default {
     // 验证重复密码
     const validatePasswords = (rule, value, callback) => {
       // 考虑性能v-show需做特殊处理
-      if (model.value == "login") {
+      if (tonixObj.model == "login") {
         callback();
       }
       ruleForm.passwords = stripscript(value);
@@ -112,8 +112,13 @@ export default {
       { txt: "登录", type: "login", current: true }, // key值id没有可以自动生成
       { txt: "注册", type: "register", current: false }
     ]);
-    const model = ref("login");
-    const showBtn = ref(true);
+    const tonixObj = reactive({
+      model: "login",
+      showBtn: true,
+      showCodeBtn: false,
+      showCodeBtnText: "获取验证码"
+    });
+    const timer = ref(null);
     const ruleForm = reactive({
       username: "",
       password: "",
@@ -133,14 +138,28 @@ export default {
       menuTab.forEach(e => {
         e.current = !e.current;
       });
-      model.value = data.type;
+      tonixObj.model = data.type;
+      context.refs.ruleForm.resetFields();
+      clearCountDown();
     };
     const submitForm = formName => {
       context.refs[formName].validate(valid => {
+        let json = {
+          model: tonixObj.model,
+          ...ruleForm
+        };
+        let btnMethod = tonixObj.model === "login" ? Login : Register;
         if (valid) {
-          alert("submit!");
+          btnMethod(json)
+            .then(res => {
+              context.root.$message.success(res.message);
+              btnMethod === "register"
+                ? toggleMenu(menuTab[0])
+                : toggleMenu(menuTab[1]);
+              clearCountDown();
+            })
+            .catch(err => {});
         } else {
-          console.log("error submit!!");
           return false;
         }
       });
@@ -159,21 +178,50 @@ export default {
       }
       let json = {
         username: ruleForm.username,
-        model: model.value
+        model: tonixObj.model
       };
+      tonixObj.showCodeBtnText = "发送中";
+      tonixObj.showCodeBtn = true;
       GetSms(json)
         .then(res => {
-          console.log(111111, res);
+          context.root.$message.success(res.message);
+          tonixObj.showBtn = false;
+          coutDown(60);
         })
         .catch(err => {});
+    };
+    /**
+     * 定时器
+     */
+    const coutDown = number => {
+      timer.value && clearInterval(timer.value);
+      let time = number;
+      timer.value = setInterval(() => {
+        time--;
+        if (time === 0) {
+          clearInterval(timer.value);
+          tonixObj.showCodeBtnText = "再次获取";
+          tonixObj.showCodeBtn = false;
+        } else {
+          tonixObj.showCodeBtnText = `倒计时${time}秒`;
+        }
+      }, 1000);
+    };
+
+    /**
+     * 清除定时器
+     */
+    const clearCountDown = () => {
+      tonixObj.showCodeBtn = false;
+      tonixObj.showCodeBtnText = "获取验证码";
+      clearInterval(timer.value);
     };
 
     return {
       menuTab,
-      model,
       ruleForm,
       rules,
-      showBtn,
+      tonixObj,
 
       toggleMenu,
       submitForm,
@@ -228,3 +276,20 @@ export default {
   }
 }
 </style>
+
+<!--
+密码加密：
+1、在前端预先加密一次
+登录的密码：123456（普通字符串）
+经过加密后：sha1('123456') == '541216ad5s4f5ds1f5asd4f65asd4' （加密后的字符串）
+
+
+2、后台加密
+接收到字符串：'541216ad5s4f5ds1f5asd4f65asd4'
+后台再次加密：md5('541216ad5s4f5ds1f5asd4f65asd4') == '8f9qwersd3g165y4d1sf3s1f6aew4'（最终的加密后的密码）
+最终新的字符串写入数据库：8f9qwersd3g165y4d1sf3s1f6aew4
+
+
+3、登录
+用户名与加密后的密码进行匹配，成功则登录，失败则提示
+-->
