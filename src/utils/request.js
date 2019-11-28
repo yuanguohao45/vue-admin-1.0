@@ -1,7 +1,12 @@
 import axios from "axios";
+import { Message } from "element-ui";
 
+const BASE_URL = process.env.NODE_ENV === "production" ? "" : "/api";
 // 创建axios,重新赋值
-const service = axios.create();
+const service = axios.create({
+  baseURL: BASE_URL,
+  timeout: 1000
+});
 
 // 添加请求拦截器
 service.interceptors.request.use(
@@ -19,21 +24,17 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   function(response) {
     // 对响应数据做点什么
-    return response;
+    let data = response.data;
+    if (data.resCode != 0) {
+      Message.error(data.message);
+      return Promise.reject(data);
+    }
+    return Promise.resolve(data);
   },
   function(error) {
     // 对响应错误做点什么
     return Promise.reject(error);
   }
 );
-
-service.request({
-  method: "post",
-  url: "/user/12345",
-  data: {
-    firstName: "Fred",
-    lastName: "Flintstone"
-  }
-});
 
 export default service;

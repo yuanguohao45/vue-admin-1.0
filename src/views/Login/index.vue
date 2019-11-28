@@ -6,30 +6,30 @@
       </ul>
       <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" class="login-form" size="medium">
         <el-form-item prop="username" class="item-form">
-          <label class="label">邮箱</label>
-          <el-input type="text" v-model="ruleForm.username" autocomplete="off"></el-input>
+          <label class="label" for="username">邮箱</label>
+          <el-input id="username" type="text" v-model="ruleForm.username" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item prop="password" class="item-form">
-          <label class="label">密码</label>
-          <el-input type="text" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
+          <label class="label" for="password">密码</label>
+          <el-input id="password" type="text" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
         <el-form-item prop="passwords" class="item-form" v-show="model=='register'">
-          <label class="label">重复密码</label>
-          <el-input type="text" v-model="ruleForm.passwords" autocomplete="off" minlength="6" maxlength="20"></el-input>
+          <label class="label" for="passwords">重复密码</label>
+          <el-input id="passwords" type="text" v-model="ruleForm.passwords" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
         <el-form-item prop="code" class="item-form">
-          <label class="label">验证码</label>
+          <label class="label" for="code">验证码</label>
           <el-row :gutter="10">
             <el-col :span="15">
-              <el-input v-model.number="ruleForm.code" minlength="6" maxlength="6"></el-input>
+              <el-input id="code" v-model.number="ruleForm.code" minlength="6" maxlength="6"></el-input>
             </el-col>
             <el-col :span="9">
-              <el-button type="success" class="block">获取验证码</el-button>
+              <el-button type="success" class="block" @click="getSms">获取验证码</el-button>
             </el-col>
           </el-row>
         </el-form-item>
         <el-form-item>
-          <el-button type="danger" @click="submitForm('ruleForm')" class="login-btn block">登录</el-button>
+          <el-button type="danger" :disabled="showBtn" @click="submitForm('ruleForm')" class="login-btn block">{{model=='login'?'登录':'注册'}}</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import service from "@/utils/request";
+import { GetSms } from "@/api/login";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import {
   stripscript,
@@ -49,6 +49,15 @@ import {
 export default {
   name: "Login",
   setup(props, context) {
+    /**
+     * attrs:(...) == this.$attrs
+     * emit:(...) == this.$emit
+     * listeners:(...) == this.$listeners
+     * parent:(...) == this.parent
+     * refs:(...) == this.refs
+     * root:(...) == this
+     * slots:(...) = {}
+     */
     /* 声明数据 */
     // 验证用户名
     const validateUserName = (rule, value, callback) => {
@@ -104,6 +113,7 @@ export default {
       { txt: "注册", type: "register", current: false }
     ]);
     const model = ref("login");
+    const showBtn = ref(true);
     const ruleForm = reactive({
       username: "",
       password: "",
@@ -135,15 +145,39 @@ export default {
         }
       });
     };
+    /**
+     * 获取验证码
+     */
+    const getSms = () => {
+      if (!ruleForm.username) {
+        context.root.$message.error("请输入用户名");
+        return false;
+      }
+      if (validateEmail(ruleForm.username)) {
+        context.root.$message.error("邮箱格式不正确");
+        return false;
+      }
+      let json = {
+        username: ruleForm.username,
+        model: model.value
+      };
+      GetSms(json)
+        .then(res => {
+          console.log(111111, res);
+        })
+        .catch(err => {});
+    };
 
     return {
       menuTab,
       model,
       ruleForm,
       rules,
+      showBtn,
 
       toggleMenu,
-      submitForm
+      submitForm,
+      getSms
     };
   }
 };
@@ -153,6 +187,8 @@ export default {
 #login {
   height: 100vh;
   background-color: #344a5f;
+  // display: flex;
+  // align-items: center;
   .login-wrap {
     width: 330px;
     margin: auto;
