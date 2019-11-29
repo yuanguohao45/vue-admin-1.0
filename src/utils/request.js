@@ -12,6 +12,10 @@ const service = axios.create({
 service.interceptors.request.use(
   function(config) {
     // 在发送请求之前做些什么
+    // 添加token userid sui ...业务需求
+    config.headers.token = "1111111111";
+    config.headers.userid = "2222222222";
+    config.headers.sui = "3333333333";
     return config;
   },
   function(error) {

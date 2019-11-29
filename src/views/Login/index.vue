@@ -37,6 +37,8 @@
 </template>
 
 <script>
+// 加密： base64,md5,sha1
+import sha1 from "js-sha1";
 import { GetSms, Register, Login } from "@/api/login";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import {
@@ -133,30 +135,48 @@ export default {
     });
     // 生命周期
     onMounted(() => {});
-    // 函数声明
+    // 函数声明---尽量功能独立，低耦合，抽象实体并进行封装
+    /**
+     * 切换模块
+     */
     const toggleMenu = data => {
       menuTab.forEach(e => {
         e.current = !e.current;
       });
       tonixObj.model = data.type;
+      resetFormData();
+    };
+    /**
+     * 清除表单数据
+     */
+    const resetFormData = () => {
       context.refs.ruleForm.resetFields();
       clearCountDown();
     };
+    /**
+     * 更新按钮状态
+     */
+    const updateBtnStatus = params => {
+      tonixObj.showCodeBtnText = params.text;
+      tonixObj.showCodeBtn = params.status;
+    };
+    /**
+     * 提交表单
+     */
     const submitForm = formName => {
       context.refs[formName].validate(valid => {
         let json = {
           model: tonixObj.model,
           ...ruleForm
         };
+        json.password = sha1(json.password);
         let btnMethod = tonixObj.model === "login" ? Login : Register;
         if (valid) {
           btnMethod(json)
             .then(res => {
               context.root.$message.success(res.message);
-              btnMethod === "register"
-                ? toggleMenu(menuTab[0])
-                : toggleMenu(menuTab[1]);
-              clearCountDown();
+              btnMethod === "register" && toggleMenu(menuTab[0]);
+              resetFormData();
             })
             .catch(err => {});
         } else {
@@ -180,8 +200,7 @@ export default {
         username: ruleForm.username,
         model: tonixObj.model
       };
-      tonixObj.showCodeBtnText = "发送中";
-      tonixObj.showCodeBtn = true;
+      updateBtnStatus({ status: true, text: "发送中" });
       GetSms(json)
         .then(res => {
           context.root.$message.success(res.message);
@@ -197,11 +216,10 @@ export default {
       timer.value && clearInterval(timer.value);
       let time = number;
       timer.value = setInterval(() => {
-        time--;
+        --time;
         if (time === 0) {
           clearInterval(timer.value);
-          tonixObj.showCodeBtnText = "再次获取";
-          tonixObj.showCodeBtn = false;
+          updateBtnStatus({ status: false, text: "再次获取" });
         } else {
           tonixObj.showCodeBtnText = `倒计时${time}秒`;
         }
@@ -212,8 +230,7 @@ export default {
      * 清除定时器
      */
     const clearCountDown = () => {
-      tonixObj.showCodeBtn = false;
-      tonixObj.showCodeBtnText = "获取验证码";
+      updateBtnStatus({ status: false, text: "获取验证码" });
       clearInterval(timer.value);
     };
 
