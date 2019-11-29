@@ -216,12 +216,12 @@ export default {
       timer.value && clearInterval(timer.value);
       let time = number;
       timer.value = setInterval(() => {
-        --time;
-        if (time === 0) {
+        if (time > 0) {
+          --time;
+          tonixObj.showCodeBtnText = `倒计时${time}秒`;
+        } else if (time === 0) {
           clearInterval(timer.value);
           updateBtnStatus({ status: false, text: "再次获取" });
-        } else {
-          tonixObj.showCodeBtnText = `倒计时${time}秒`;
         }
       }, 1000);
     };
