@@ -122,8 +122,8 @@ export default {
     });
     const timer = ref(null);
     const ruleForm = reactive({
-      username: "",
-      password: "",
+      username: "yuanguohao43@163.com",
+      password: "123456ygh",
       passwords: "",
       code: ""
     });
@@ -175,7 +175,11 @@ export default {
           btnMethod(json)
             .then(res => {
               context.root.$message.success(res.message);
-              btnMethod === "register" && toggleMenu(menuTab[0]);
+              btnMethod === "register"
+                ? toggleMenu(menuTab[0])
+                : context.root.$router.push({
+                    name: "Dashboard"
+                  });
               resetFormData();
             })
             .catch(err => {});

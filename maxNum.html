@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+
+  <body></body>
+</html>
+<script>
+  var str = "qwertyuiopasdfghjklzxcvbnmqazwsxaswazaaa吞吞吐吐";
+  var arr = str.split("");
+  // console.log("转化后的数组", arr)
+  function moreLetter(arr) {
+    if (!arr) return arr;
+    if (arr.length == 1) return 1;
+    let obj = {};
+    for (var i = 0; i < arr.length; i++) {
+      if (!obj[arr[i]]) {
+        obj[arr[i]] = 1;
+      } else {
+        obj[arr[i]]++;
+      }
+    }
+    // 算出最大值
+    console.log("99 ", obj);
+    var maxCount = 0,
+      eq = [],
+      maxElement = arr[0];
+    for (var key in obj) {
+      if (obj[key] > maxCount) {
+        maxCount = obj[key];
+        maxElement = key;
+        eq.length = 0;
+      } else if (obj[key] === maxCount) {
+        eq.push(key);
+      }
+    }
+    // 最大值有几个
+    if (eq.length > 0) {
+      for (var j = 0; j < eq.length; j++) {
+        maxElement += "，" + eq[j];
+      }
+    }
+    return (
+      "该数组中出现次数最多的元素:" +
+      maxElement +
+      "-----出现了:" +
+      maxCount +
+      "次"
+    );
+  }
+
+  console.log("哦哦哦", moreLetter(arr));
+</script>
