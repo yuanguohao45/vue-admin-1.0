@@ -215,6 +215,7 @@ export default {
     const coutDown = number => {
       timer.value && clearInterval(timer.value);
       let time = number;
+      tonixObj.showCodeBtnText = `倒计时${time}秒`;
       timer.value = setInterval(() => {
         if (time > 0) {
           --time;
