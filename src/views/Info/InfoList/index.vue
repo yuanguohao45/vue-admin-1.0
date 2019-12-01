@@ -1,15 +1,15 @@
 <template>
-  <div></div>
+  <div>信息列表</div>
 </template>
 
 <script>
 export default {
-  name: "user",
+  name: "InfoList",
   setup(props, context) {
     return {};
   }
 };
 </script>
 
-<style>
+<style lang="scss" scoped>
 </style>

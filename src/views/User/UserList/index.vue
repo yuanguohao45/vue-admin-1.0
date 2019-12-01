@@ -1,13 +1,11 @@
 <template>
-  <div></div>
+  <div>用户列表</div>
 </template>
 
 <script>
 export default {
-  name: "user",
-  setup(props, context) {
-    return {};
-  }
+  name: "UserList",
+  setup(props, context) {}
 };
 </script>
 

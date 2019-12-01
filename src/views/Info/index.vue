@@ -1,10 +1,10 @@
 <template>
-  <div></div>
+  <div>信息管理</div>
 </template>
 
 <script>
 export default {
-  name: "user",
+  name: "Info",
   setup(props, context) {
     return {};
   }

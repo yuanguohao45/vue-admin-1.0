@@ -1,10 +1,10 @@
 <template>
-  <div></div>
+  <div>信息分类</div>
 </template>
 
 <script>
 export default {
-  name: "user",
+  name: "InfoCategory",
   setup(props, context) {
     return {};
   }
