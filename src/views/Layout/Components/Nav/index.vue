@@ -1,7 +1,7 @@
 <template>
   <div id="nav-wrap">
     <h1 class="logo"><img src="@/assets/logo.png" alt=""></h1>
-    <el-menu default-active="2" class="el-menu-vertical-demo" background-color="transparent" text-color="#fff" active-text-color="#fff" :collapse="isCollapse" @open="handleOpen" @close="handleClose" router>
+    <el-menu default-active="2" class="el-menu-vertical-demo" background-color="transparent" text-color="#fff" active-text-color="#fff" :collapse="isCollapse" router>
       <template v-for="(item,index) in routers">
         <el-submenu :index="index + ''" v-if="!item.hidden" :key="item.id">
           <template slot="title">
@@ -16,26 +16,32 @@
 </template>
 
 <script>
-import { ref, reactive } from "@vue/composition-api";
+import {
+  ref,
+  reactive,
+  computed,
+  isRef,
+  toRefs,
+  onMounted
+} from "@vue/composition-api";
 export default {
   name: "Nav",
   setup(props, { root }) {
     /**
      * data
      */
-    const isCollapse = ref(false);
     const routers = reactive(root.$router.options.routes);
+    /**
+     * computed监听
+     */
+    const isCollapse = computed(() => root.$store.state.isCollapse);
     /**
      * method
      */
-    const handleOpen = (key, keyPath) => {};
-    const handleClose = (key, keyPath) => {};
+
     return {
       isCollapse,
-      routers,
-
-      handleOpen,
-      handleClose
+      routers
     };
   }
 };
@@ -48,9 +54,8 @@ export default {
   top: 0;
   left: 0;
   height: 100vh;
-  width: $navMenu;
   background-color: #344a5f;
-  // @include webkit(transition, all 0.3s ease 0s);
+  @include webkit(transition, all 0.3s ease 0s);
   .logo {
     text-align: center;
     img {

@@ -1,6 +1,6 @@
 <template>
   <div id="header-wrap">
-    <div class="pull-left header-icon">
+    <div class="pull-left header-icon" @click="navMenuState">
       <svg-icon iconClass="info" className="info"></svg-icon>
     </div>
     <div class="pull-right">
@@ -20,8 +20,15 @@ import { ref, reactive } from "@vue/composition-api";
 export default {
   name: "Header",
   setup(props, context) {
-    // const exit = () => {};
-    // return exit;
+    /**
+     * 函数
+     */
+    const navMenuState = () => {
+      context.root.$store.commit("SET_ISCOLLAPSE");
+    };
+    return {
+      navMenuState
+    };
   }
 };
 </script>
@@ -31,11 +38,11 @@ export default {
 #header-wrap {
   position: fixed;
   top: 0;
-  left: $navMenu;
   right: 0;
   height: 75px;
   -webkit-box-shadow: 0 3px 16px 0 rgba(0, 0, 0, 0.1);
   line-height: 75px;
+  @include webkit(transition, all 0.3s ease 0s);
 }
 .header-icon {
   padding: 0 32px;
