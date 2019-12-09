@@ -19,12 +19,14 @@
 import { ref, reactive } from "@vue/composition-api";
 export default {
   name: "Header",
-  setup(props, context) {
+  setup(props, { root }) {
     /**
      * 函数
      */
     const navMenuState = () => {
-      context.root.$store.commit("SET_ISCOLLAPSE");
+      console.log(1111111, root.$store.state);
+      // root.$store.dispatch("setMenuStatus", { name: "aaa" });
+      root.$store.state.app.commit("SET_ISCOLLAPSE");
     };
     return {
       navMenuState

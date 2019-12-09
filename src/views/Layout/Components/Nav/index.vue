@@ -34,7 +34,7 @@ export default {
     /**
      * computed监听
      */
-    const isCollapse = computed(() => root.$store.state.isCollapse);
+    const isCollapse = computed(() => root.$store.state.app.isCollapse);
     /**
      * method
      */
@@ -61,6 +61,7 @@ export default {
     img {
       width: 92px;
       margin: 28px auto 26px;
+      @include webkit(transition, all 0.3s ease 0s);
     }
   }
   svg {

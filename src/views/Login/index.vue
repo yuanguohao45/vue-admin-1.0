@@ -50,7 +50,7 @@ import {
 
 export default {
   name: "Login",
-  setup(props, context) {
+  setup(props, { refs, root }) {
     /**
      * attrs:(...) == this.$attrs
      * emit:(...) == this.$emit
@@ -150,7 +150,7 @@ export default {
      * 清除表单数据
      */
     const resetFormData = () => {
-      context.refs.ruleForm.resetFields();
+      refs.ruleForm.resetFields();
       clearCountDown();
     };
     /**
@@ -164,25 +164,30 @@ export default {
      * 提交表单
      */
     const submitForm = formName => {
-      context.refs[formName].validate(valid => {
+      refs[formName].validate(valid => {
         let json = {
           model: tonixObj.model,
           ...ruleForm
         };
         json.password = sha1(json.password);
-        let btnMethod = tonixObj.model === "login" ? Login : Register;
+        // let btnMethod = tonixObj.model === "login" ? Login : Register;
         if (valid) {
-          btnMethod(json)
+          root.$store
+            .dispatch("login", json)
             .then(res => {
-              context.root.$message.success(res.message);
-              btnMethod === "register"
+              root.$message.success(res.message);
+              json.model === "register"
                 ? toggleMenu(menuTab[0])
-                : context.root.$router.push({
+                : root.$router.push({
                     name: "Dashboard"
                   });
               resetFormData();
             })
-            .catch(err => {});
+            .catch(err);
+          // btnMethod(json)
+          //   .then(res => {
+          //   })
+          //   .catch(err => {});
         } else {
           return false;
         }
@@ -193,11 +198,11 @@ export default {
      */
     const getSms = () => {
       if (!ruleForm.username) {
-        context.root.$message.error("请输入用户名");
+        root.$message.error("请输入用户名");
         return false;
       }
       if (validateEmail(ruleForm.username)) {
-        context.root.$message.error("邮箱格式不正确");
+        root.$message.error("邮箱格式不正确");
         return false;
       }
       let json = {
@@ -207,7 +212,7 @@ export default {
       updateBtnStatus({ status: true, text: "发送中" });
       GetSms(json)
         .then(res => {
-          context.root.$message.success(res.message);
+          root.$message.success(res.message);
           tonixObj.showBtn = false;
           coutDown(60);
         })
