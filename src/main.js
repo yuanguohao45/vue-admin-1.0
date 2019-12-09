@@ -6,6 +6,7 @@ import store from "./store";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import "@/icons";
+import '@/router/premit'
 
 Vue.use(ElementUI);
 Vue.use(VueCompositionApi);
