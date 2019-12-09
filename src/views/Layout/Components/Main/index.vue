@@ -9,7 +9,11 @@
 </template>
 
 <script>
-export default {};
+import { ref, reactive } from "@vue/composition-api";
+export default {
+  name: "Main",
+  setup(props, context) {}
+};
 </script>
 
 <style lang="scss" scoped>

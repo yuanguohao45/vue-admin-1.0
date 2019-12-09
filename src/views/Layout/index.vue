@@ -43,6 +43,11 @@ export default {
 .close {
   #nav-wrap {
     width: $navMenuMin;
+    /deep/ .logo {
+      img {
+        width: 60% !important;
+      }
+    }
   }
   #header-wrap {
     left: $navMenuMin;

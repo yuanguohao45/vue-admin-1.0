@@ -7,8 +7,28 @@
   }
 }
 
-.el-submenu {
+li.el-submenu {
   &.is-active.is-opened .el-submenu__title {
     background-color: $mainColor !important;
+  }
+}
+
+.close {
+  .el-submenu {
+    &.is-opened {
+      > .el-submenu__title {
+        background-color: $mainColor !important;
+      }
+    }
+  }
+}
+
+.el-menu--vertical {
+  .el-menu-item {
+    line-height: 56px;
+    background-color: rgba(245, 108, 108, 0.6) !important;
+    &:hover {
+      background-color: $mainColor !important;
+    }
   }
 }
