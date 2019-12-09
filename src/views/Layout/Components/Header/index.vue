@@ -26,7 +26,7 @@ export default {
     const navMenuState = () => {
       console.log(1111111, root.$store.state);
       // root.$store.dispatch("setMenuStatus", { name: "aaa" });
-      root.$store.state.app.commit("SET_ISCOLLAPSE");
+      root.$store.commit("app/SET_ISCOLLAPSE");
     };
     return {
       navMenuState

@@ -26,7 +26,7 @@ export default {
     /**
      * computed 监听
      */
-    const menuStatus = computed(() => root.$store.state.isCollapse);
+    const menuStatus = computed(() => root.$store.state.app.isCollapse);
     return {
       menuStatus
     };

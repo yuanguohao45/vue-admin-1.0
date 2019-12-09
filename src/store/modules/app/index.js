@@ -7,22 +7,21 @@ import { Login, Register } from "@/api/login";
 
 // setItem 、getItem 、removueItem、clear
 
-const app = {
-  state: {
+  const state ={
     isCollapse: JSON.parse(sessionStorage.getItem("isCollapse")) || false
     // isCollapse: JSON.parse(Cookie.get("isCollapse")) || false
-  },
-  getters: {},
+  }
+  const getters = {}
   // 必须的 同步 不需要回调
-  mutations: {
+  const mutations = {
     SET_ISCOLLAPSE(state, value) {
       state.isCollapse = !state.isCollapse;
       // sessionStorage----localStorage
       sessionStorage.setItem("isCollapse", JSON.stringify(state.isCollapse));
       // Cookie.set("isCollapse", JSON.stringify(state.isCollapse));
     }
-  },
-  actions: {
+  }
+  const actions = {
     // state, getters, commit, dispatch, rootGetters, rootState
     setMenuStatus({ state, getters, commit, dispatch }, data) {
       // commit("SET_ISCOLLAPSE");
@@ -40,6 +39,11 @@ const app = {
       });
     }
   }
-};
 
-export default app;
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  getters,
+  actions
+};
