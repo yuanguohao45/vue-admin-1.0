@@ -6,5 +6,8 @@
 
 <style lang="scss">
 #app {
+  .class {
+    color: red;
+  }
 }
 </style>
