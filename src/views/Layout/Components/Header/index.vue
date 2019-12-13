@@ -24,9 +24,9 @@ export default {
      * 函数
      */
     const navMenuState = () => {
-      console.log(1111111, root.$store.state);
-      // root.$store.dispatch("setMenuStatus", { name: "aaa" });
-      root.$store.state.app.commit("SET_ISCOLLAPSE");
+      // root.$store.dispatch("app/setMenuStatus", { name: "aaa" });
+      // console.log(1111111, root.$store);
+      root.$store.commit("app/SET_ISCOLLAPSE");
     };
     return {
       navMenuState
