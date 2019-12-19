@@ -6,7 +6,7 @@
     <div class="pull-right">
       <div class="user-info pull-left">
         <img src="@/assets/images/face.jpeg" alt="">
-        管理员
+        {{userName}}
       </div>
       <div class="pull-left header-icon">
         <svg-icon iconClass="exit" className="exit"></svg-icon>
@@ -16,10 +16,14 @@
 </template>
 
 <script>
-import { ref, reactive } from "@vue/composition-api";
+import { ref, reactive, computed } from "@vue/composition-api";
 export default {
   name: "Header",
   setup(props, { root }) {
+    /**
+     * 监听
+     */
+    const userName = computed(() => root.$store.state.app.userName);
     /**
      * 函数
      */
@@ -29,7 +33,8 @@ export default {
       root.$store.commit("app/SET_ISCOLLAPSE");
     };
     return {
-      navMenuState
+      navMenuState,
+      userName
     };
   }
 };

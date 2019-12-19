@@ -173,7 +173,7 @@ export default {
         // let btnMethod = tonixObj.model === "login" ? Login : Register;
         if (valid) {
           root.$store
-            .dispatch("login", json)
+            .dispatch("app/login", json)
             .then(res => {
               root.$message.success(res.message);
               json.model === "register"
@@ -183,7 +183,7 @@ export default {
                   });
               resetFormData();
             })
-            .catch(err);
+            .catch(err => {});
           // btnMethod(json)
           //   .then(res => {
           //   })
