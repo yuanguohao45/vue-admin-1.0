@@ -1,36 +1,70 @@
 <template>
   <div>
-    <el-row :gutter="20">
-      <el-form :inline="true" :model="formInline">
-        <el-col :span="4">
-          <el-form-item label="类型：">
-            <el-select v-model="type" placeholder="请选择" style="width:120px;">
+    <el-row :gutter="16">
+      <el-col :span="4">
+        <div class="label-wrap category">
+          <label for="">类型：</label>
+          <div class="wrap-content">
+            <el-select v-model="type" placeholder="请选择" style="width:100%;">
               <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
               </el-option>
             </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="日期：">
-            <el-date-picker v-model="dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']">
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="7">
+        <div class="label-wrap date">
+          <label for="">日期：&nbsp;&nbsp;</label>
+          <div class="wrap-content">
+            <el-date-picker style="width:100%;" v-model="dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']">
             </el-date-picker>
-          </el-form-item>
-        </el-col>
-        <el-col :span="3">
-          <el-form-item label="关键字：">
-            <el-select v-model="keyWord" style="width:80px;">
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="3">
+        <div class="label-wrap key-word">
+          <label for="">关键字：&nbsp;&nbsp;</label>
+          <div class="wrap-content">
+            <el-select v-model="keyWord" style="width:100%;">
               <el-option v-for="item in kwOptions" :key="item.value" :label="item.label" :value="item.value">
               </el-option>
             </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="4">
-          <el-form-item>
-            <el-input v-model="inputValue" placeholder="请输入内容"></el-input>
-          </el-form-item>
-        </el-col>
-      </el-form>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="3">
+        <el-input style="width:100%;" v-model="inputValue" placeholder="请输入内容"></el-input>
+      </el-col>
+      <el-col :span="3">
+        <el-button type="danger" style="width: 120px;" @click="searchList">搜索</el-button>
+      </el-col>
+      <el-col :span="4" align="right">
+        <el-button type="danger" style="width: 120px;" @click="dialog_info = true">新增</el-button>
+      </el-col>
     </el-row>
+    <el-table class="m-t-30" ref="multipleTable" border :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="headerStyle" :cell-style="cellStyle">
+      <el-table-column type="selection" min-width="55" align="center">
+      </el-table-column>
+      <el-table-column prop="title" label="标题" min-width="240" align="center" show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column prop="category" label="类别" min-width="60" align="center" show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column prop="date" label="日期" min-width="120" align="center" show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column prop="user" label="管理员" min-width="60" align="center" show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column label="操作" min-width="130" align="center">
+        <template slot-scope="scope">
+          <el-button type="danger" size="mini" @click="handleRow('del',scope.row)">删除</el-button>
+          <el-button type="success" size="mini" @click="handleRow('del',scope.row)">编辑</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="m-t-30">
+      <el-button @click="delGroup" plain class="pull-left">批量删除</el-button>
+      <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="400">
+      </el-pagination>
+    </div>
   </div>
 </template>
 
@@ -38,7 +72,7 @@
 import { reactive, ref } from "@vue/composition-api";
 export default {
   name: "InfoList",
-  setup(props, context) {
+  setup(props, { root }) {
     const options = reactive([
       {
         value: "1",
@@ -63,24 +97,96 @@ export default {
         label: "标题"
       }
     ]);
+    const tableData = reactive([
+      {
+        date: "2016-05-03",
+        user: "王小虎",
+        title: "上海市普陀区金沙江路 1518 弄",
+        category: "ID"
+      },
+      {
+        date: "2016-05-03",
+        user: "王小虎",
+        title: "上海市普陀区金沙江路 1518 弄",
+        category: "ID"
+      },
+      {
+        date: "2016-05-03",
+        user: "王小虎",
+        title: "上海市普陀区金沙江路 1518 弄",
+        category: "ID"
+      },
+      {
+        date: "2016-05-03",
+        user: "王小虎",
+        title: "上海市普陀区金沙江路 1518 弄",
+        category: "ID"
+      }
+    ]);
+    const multipleSelection = reactive([]);
+    const headerStyle = reactive({'font-size':'14px','font-weight':'bold','color':'#344a5f'});
+    const cellStyle = reactive({'font-size':'14px'});
     const type = ref("");
     const dateRange = ref("");
-    const keyWord = ref("");
+    const keyWord = ref("ID");
     const inputValue = ref("");
+    const currentPage = ref(1);
+    const pageSize = ref(10);
+
+    /**
+     * 方法
+     */
+    const searchList = () => {};
+    const handleSelectionChange = val => {
+      console.log(val);
+      root.multipleSelection = val;
+    };
+    const handleRow = () => {};
+    const delGroup = () => {};
+
+    const handleSizeChange = val => {
+      console.log(`每页 ${val} 条`);
+    };
+    const handleCurrentChange = val => {
+      console.log(`当前页: ${val}`);
+    };
+
     return {
       options,
       kwOptions,
       type,
       dateRange,
       keyWord,
-      inputValue
+      inputValue,
+      tableData,
+      multipleSelection,
+      delGroup,
+      handleRow,
+      handleSizeChange,
+      handleCurrentChange,
+      pageSize,
+      currentPage,
+      headerStyle,
+      cellStyle,
+
+      searchList,
+      handleSelectionChange
     };
   }
 };
 </script>
 
 <style lang="scss" scoped>
-.bgc {
-  background-color: #fff;
+@import "@/styles/config.scss";
+.label-wrap {
+  &.category {
+    @include labelDom(left, 60, 40);
+  }
+  &.date {
+    @include labelDom(right, 93, 40);
+  }
+  &.key-word {
+    @include labelDom(right, 99, 40);
+  }
 }
 </style>
