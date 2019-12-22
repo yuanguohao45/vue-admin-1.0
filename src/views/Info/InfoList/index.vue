@@ -39,7 +39,7 @@
         <el-button type="danger" style="width: 120px;" @click="searchList">搜索</el-button>
       </el-col>
       <el-col :span="4" align="right">
-        <el-button type="danger" style="width: 120px;" @click="dialog_info = true">新增</el-button>
+        <el-button type="danger" style="width: 120px;" @click="handleRow('new')">新增</el-button>
       </el-col>
     </el-row>
     <el-table class="m-t-30" ref="multipleTable" border :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="headerStyle" :cell-style="cellStyle">
@@ -56,7 +56,7 @@
       <el-table-column label="操作" min-width="130" align="center">
         <template slot-scope="scope">
           <el-button type="danger" size="mini" @click="handleRow('del',scope.row)">删除</el-button>
-          <el-button type="success" size="mini" @click="handleRow('del',scope.row)">编辑</el-button>
+          <el-button type="success" size="mini" @click="handleRow('edit',scope.row)">编辑</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -65,14 +65,21 @@
       <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="400">
       </el-pagination>
     </div>
+    <Dialog :showDialog.sync="showDialog"></Dialog>
   </div>
 </template>
 
 <script>
 import { reactive, ref } from "@vue/composition-api";
+import Dialog from "../Dialog";
 export default {
   name: "InfoList",
+  components: { Dialog },
   setup(props, { root }) {
+    /**
+     * 属性初始化
+     */
+    // reactive
     const options = reactive([
       {
         value: "1",
@@ -124,24 +131,41 @@ export default {
       }
     ]);
     const multipleSelection = reactive([]);
-    const headerStyle = reactive({'font-size':'14px','font-weight':'bold','color':'#344a5f'});
-    const cellStyle = reactive({'font-size':'14px'});
+    const headerStyle = reactive({
+      "font-size": "14px",
+      "font-weight": "bold",
+      color: "#344a5f"
+    });
+    const cellStyle = reactive({ "font-size": "14px" });
+    // ref
     const type = ref("");
     const dateRange = ref("");
     const keyWord = ref("ID");
     const inputValue = ref("");
     const currentPage = ref(1);
     const pageSize = ref(10);
+    const showDialog = ref(false);
 
     /**
      * 方法
      */
     const searchList = () => {};
     const handleSelectionChange = val => {
-      console.log(val);
-      root.multipleSelection = val;
+      console.log(multipleSelection);
+      multipleSelection.value = val;
     };
-    const handleRow = () => {};
+    const handleRow = (bol, row) => {
+      switch (bol) {
+        case "new":
+          showDialog.value = true;
+          break;
+        case "edit":
+          showDialog.value = true;
+          break;
+        case "del":
+          break;
+      }
+    };
     const delGroup = () => {};
 
     const handleSizeChange = val => {
@@ -150,7 +174,6 @@ export default {
     const handleCurrentChange = val => {
       console.log(`当前页: ${val}`);
     };
-
     return {
       options,
       kwOptions,
@@ -168,6 +191,7 @@ export default {
       currentPage,
       headerStyle,
       cellStyle,
+      showDialog,
 
       searchList,
       handleSelectionChange
