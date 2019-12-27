@@ -1,27 +1,30 @@
+import { MessageBox } from "element-ui";
+
 export default {
   install(Vue, options) {
-    Vue.prototype.confirm = funciton() {
-      root
-      .$confirm("即将删除全部, 是否继续?", "提示", {
+    Vue.prototype.confirm = function({ content, tip, type, fnc }) {
+      // 不用 => 可以避免操作内this指向问题
+      MessageBox.confirm(content, tip || "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "success",
+        type: type || "success",
         center: true
       })
-      .then(() => {
-        root.$message({ 
-          type: "success",
-          message: "删除成功!"
+        .then(() => {
+          fnc && fnc();
+          this.$message({
+            type: "success",
+            message: "删除成功!"
+          });
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除"
+          });
         });
-      })
-      .catch(() => {
-        root.$message({
-          type: "info",
-          message: "已取消删除"
-        });
-      });
-    }
+    };
   }
-}
+};
 
 // vue插件

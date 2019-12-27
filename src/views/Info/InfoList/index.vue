@@ -71,6 +71,7 @@
 
 <script>
 import { reactive, ref } from "@vue/composition-api";
+import { global } from "@/utils/global";
 import Dialog from "../Dialog";
 export default {
   name: "InfoList",
@@ -79,6 +80,10 @@ export default {
     /**
      * 属性初始化
      */
+    const { str, confirm } = global();
+    // watch(() => {
+    //   console.log(str.value);
+    // });
     // reactive
     const options = reactive([
       {
@@ -168,46 +173,21 @@ export default {
       }
     };
     const delMethod = row => {
-      root
-        .$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "success",
-          center: true
-        })
-        .then(() => {
-          root.$message({
-            type: "success",
-            message: "删除成功!"
-          });
-        })
-        .catch(() => {
-          root.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
+      confirm({
+        content: "此操作将永久删除该文件, 是否继续?",
+        tip: "警告"
+      });
     };
     const delGroup = () => {
-      root
-        .$confirm("即将删除全部, 是否继续?", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "success",
-          center: true
-        })
-        .then(() => {
-          root.$message({
-            type: "success",
-            message: "删除成功!"
-          });
-        })
-        .catch(() => {
-          root.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
+      confirm({
+        content: "即将删除全部, 是否继续?",
+        type: "warning",
+        fnc: delFnc
+      });
+    };
+
+    const delFnc = () => {
+      alert(1);
     };
 
     const handleSizeChange = val => {
