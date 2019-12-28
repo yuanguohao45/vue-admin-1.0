@@ -163,6 +163,25 @@ export default {
           showDialog.value = true;
           break;
         case "del":
+          root
+            .$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              type: "warning",
+              center: true
+            })
+            .then(() => {
+              root.$message({
+                type: "success",
+                message: "删除成功!"
+              });
+            })
+            .catch(() => {
+              root.$message({
+                type: "info",
+                message: "已取消删除"
+              });
+            });
           break;
       }
     };
