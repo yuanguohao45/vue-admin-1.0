@@ -7,9 +7,11 @@
  * 1. Correct the line height in all browsers.
  * 2. Prevent adjustments of font size after orientation changes in iOS.
  */
+/*
+ *  div 的默认样式不存在padding,margin 为0的情况
+ */
 html,
 body,
-div,
 span,
 applet,
 object,
