@@ -49,7 +49,7 @@
       </el-table-column>
       <el-table-column prop="categoryId" label="类别" min-width="60" align="center" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="createDate" label="日期" min-width="120" align="center" show-overflow-tooltip>
+      <el-table-column prop="createDate" label="日期" :formatter="timeFormat" min-width="120" align="center" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="content" label="概况" min-width="60" align="center" show-overflow-tooltip>
       </el-table-column>
@@ -75,6 +75,8 @@ import { global } from "@/utils/global";
 import Dialog from "../Dialog";
 import { getCategory, getInfoList } from "@/api/news";
 import { common } from "@/api/common";
+import { timeTounix } from "@/utils/timeTounix";
+import moment from "moment";
 
 export default {
   name: "InfoList",
@@ -85,6 +87,7 @@ export default {
      */
     const { str, confirm } = global();
     const { getInfoCategory } = common(); // category
+    const { datetounixMethods } = timeTounix(); // category
     /**
      *  data初始化
      */
@@ -251,6 +254,13 @@ export default {
       dataObj.queryParams.pageNumber = val;
       getInfoData();
     };
+    const timeFormat = (row, column) => {
+      let date = row[column.property];
+      if (date == undefined) {
+        return "";
+      }
+      return moment(date).format("YYYY-MM-DD HH:mm:ss");
+    };
     return {
       // data
       dataObj,
@@ -261,7 +271,9 @@ export default {
       searchList,
       handleSizeChange,
       handleCurrentChange,
-      handleSelectionChange
+      handleSelectionChange,
+      // public
+      timeFormat
     };
   }
 };
