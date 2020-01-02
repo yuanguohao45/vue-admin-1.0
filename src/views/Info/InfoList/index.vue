@@ -5,8 +5,8 @@
         <div class="label-wrap category">
           <label for="">分类：</label>
           <div class="wrap-content">
-            <el-select v-model="queryParams.categoryId" placeholder="请选择" style="width:100%;" clearable>
-              <el-option v-for="item in options.info" :key="item.id" :label="item.category_name" :value="item.id">
+            <el-select v-model="dataObj.queryParams.categoryId" placeholder="请选择" style="width:100%;" clearable>
+              <el-option v-for="item in dataObj.options.info" :key="item.id" :label="item.category_name" :value="item.id">
               </el-option>
             </el-select>
           </div>
@@ -16,7 +16,7 @@
         <div class="label-wrap date">
           <label for="">日期：&nbsp;&nbsp;</label>
           <div class="wrap-content">
-            <el-date-picker style="width:100%;" v-model="dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']" clearable>
+            <el-date-picker style="width:100%;" v-model="dataObj.dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']" clearable>
             </el-date-picker>
           </div>
         </div>
@@ -25,15 +25,15 @@
         <div class="label-wrap key-word">
           <label for="">关键字：&nbsp;&nbsp;</label>
           <div class="wrap-content">
-            <el-select v-model="queryParams.id" style="width:100%;" clearable>
-              <el-option v-for="item in kwOptions" :key="item.value" :label="item.label" :value="item.value">
+            <el-select v-model="dataObj.queryParams.id" style="width:100%;" clearable>
+              <el-option v-for="item in dataObj.kwOptions" :key="item.value" :label="item.label" :value="item.value">
               </el-option>
             </el-select>
           </div>
         </div>
       </el-col>
       <el-col :span="3">
-        <el-input style="width:100%;" v-model="queryParams.title" placeholder="请输入内容" clearable></el-input>
+        <el-input style="width:100%;" v-model="dataObj.queryParams.title" placeholder="请输入内容" clearable></el-input>
       </el-col>
       <el-col :span="3">
         <el-button type="danger" style="width: 120px;" @click="searchList">搜索</el-button>
@@ -42,7 +42,7 @@
         <el-button type="danger" style="width: 120px;" @click="handleRow('new')">新增</el-button>
       </el-col>
     </el-row>
-    <el-table class="m-t-30" ref="multipleTable" v-loading="tableLoading" border :data="tableData.info" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="headerStyle" :cell-style="cellStyle">
+    <el-table class="m-t-30" ref="multipleTable" v-loading="dataObj.tableLoading" border :data="dataObj.tableData.info" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="dataObj.headerStyle" :cell-style="dataObj.cellStyle">
       <el-table-column type="selection" min-width="55" align="center">
       </el-table-column>
       <el-table-column prop="title" label="标题" min-width="240" align="center" show-overflow-tooltip>
@@ -62,10 +62,10 @@
     </el-table>
     <div class="m-t-30">
       <el-button @click="delGroup" plain class="pull-left">批量删除</el-button>
-      <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="queryParams.pageNumber" :page-sizes="[10, 20, 30, 40]" :page-size="queryParams.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
+      <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="dataObj.queryParams.pageNumber" :page-sizes="[10, 20, 30, 40]" :page-size="dataObj.queryParams.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="dataObj.total">
       </el-pagination>
     </div>
-    <Dialog :showDialog.sync="showDialog" :classObj="classObj" @freshList="searchList"></Dialog>
+    <Dialog :showDialog.sync="dataObj.showDialog" :classObj="dataObj.classObj" @freshList="searchList"></Dialog>
   </div>
 </template>
 
@@ -81,70 +81,65 @@ export default {
   components: { Dialog },
   setup(props, { root }) {
     /**
-     * 属性初始化
+     *  全局方法
      */
     const { str, confirm } = global();
     const { getInfoCategory } = common(); // category
-    // watch(() => {
-    //   console.log(str.value);
-    // });
-    // reactive
-    const options = reactive({
-      info: [
-        {
-          value: "1",
-          label: "国际信息"
-        },
-        {
-          value: "2",
-          label: "国内信息"
-        },
-        {
-          value: "3",
-          label: "行业信息"
-        }
-      ]
-    });
-    const kwOptions = reactive([
-      {
-        value: "id",
-        label: "ID"
+    /**
+     *  data初始化
+     */
+    const dataObj = reactive({
+      options: {
+        info: [
+          {
+            value: "1",
+            label: "国际信息"
+          },
+          {
+            value: "2",
+            label: "国内信息"
+          },
+          {
+            value: "3",
+            label: "行业信息"
+          }
+        ]
       },
-      {
-        value: "title",
-        label: "标题"
-      }
-    ]);
-    const tableData = reactive({
-      info: []
+      kwOptions: [
+        {
+          value: "id",
+          label: "ID"
+        },
+        {
+          value: "title",
+          label: "标题"
+        }
+      ],
+      tableData: {
+        info: []
+      },
+      multipleSelection: [],
+      classObj: { info: [] },
+      headerStyle: {
+        "font-size": "14px",
+        "font-weight": "bold",
+        color: "#344a5f"
+      },
+      cellStyle: { "font-size": "14px" },
+      queryParams: {
+        categoryId: "",
+        startTime: "",
+        endTime: "",
+        title: "",
+        id: "",
+        pageNumber: 1,
+        pageSize: 10
+      },
+      dateRange: "",
+      showDialog: false,
+      total: 0,
+      tableLoading: false
     });
-    const multipleSelection = reactive([]);
-    const classObj = reactive({ info: [] });
-    const headerStyle = reactive({
-      "font-size": "14px",
-      "font-weight": "bold",
-      color: "#344a5f"
-    });
-    const cellStyle = reactive({ "font-size": "14px" });
-    const queryParams = reactive({
-      categoryId: "",
-      startTime: "",
-      endTime: "",
-      title: "",
-      id: "",
-      pageNumber: 1,
-      pageSize: 10
-    });
-    // ref
-    const type = ref("");
-    const dateRange = ref("");
-    const keyWord = ref("ID");
-    const inputValue = ref("");
-    const currentPage = ref(1);
-    const pageSize = ref(10);
-    const showDialog = ref(false);
-    const total = ref(0);
-    const tableLoading = ref(false);
     /**
      *  mounted
      */
@@ -163,23 +158,23 @@ export default {
     //   }
     // );
     /**
-     * 方法
+     *  方法
      */
     // 获取信息列表
     const getInfoData = () => {
-      tableLoading.value = true;
-      getInfoList(queryParams)
+      dataObj.tableLoading = true;
+      getInfoList(dataObj.queryParams)
         .then(res => {
-          tableLoading.value = false;
+          dataObj.tableLoading = false;
           if (res.resCode == 0) {
-            tableData.info = res.data.data;
-            total.value = res.data.total;
+            dataObj.tableData.info = res.data.data;
+            dataObj.total = res.data.total;
             return;
           }
           root.$message.error(res.message);
         })
         .catch(err => {
-          tableLoading.value = false;
+          dataObj.tableLoading = false;
         });
     };
     // 错误捕获
@@ -194,8 +189,8 @@ export default {
         .then(res => {
           let data = res.data.data;
           if (res.resCode == 0) {
-            options.info = data;
-            classObj.info = data;
+            dataObj.options.info = data;
+            dataObj.classObj.info = data;
             return;
           }
           root.$message.error(res.message);
@@ -215,15 +210,15 @@ export default {
       getInfoData();
     };
     const handleSelectionChange = val => {
-      multipleSelection.value = val;
+      dataObj.multipleSelection = val;
     };
     const handleRow = (bol, row) => {
       switch (bol) {
         case "new":
-          showDialog.value = true;
+          dataObj.showDialog = true;
           break;
         case "edit":
-          showDialog.value = true;
+          dataObj.showDialog = true;
           break;
         case "del":
           delMethod(row);
@@ -249,37 +244,24 @@ export default {
     };
 
     const handleSizeChange = val => {
-      console.log(`每页 ${val} 条`);
+      dataObj.queryParams.pageSize = val;
+      handleCurrentChange(1);
     };
     const handleCurrentChange = val => {
-      console.log(`当前页: ${val}`);
+      dataObj.queryParams.pageNumber = val;
+      getInfoData();
     };
     return {
-      options,
-      classObj,
-      kwOptions,
-      type,
-      dateRange,
-      keyWord,
-      inputValue,
-      tableData,
-      multipleSelection,
+      // data
+      dataObj,
+      // methods
       delGroup,
+      delMethod,
       handleRow,
+      searchList,
       handleSizeChange,
       handleCurrentChange,
-      pageSize,
-      currentPage,
-      headerStyle,
-      cellStyle,
-      showDialog,
-      tableLoading,
-      total,
-      queryParams,
-
-      searchList,
-      handleSelectionChange,
-      delMethod
+      handleSelectionChange
     };
   }
 };
