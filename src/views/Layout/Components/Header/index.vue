@@ -8,7 +8,7 @@
         <img src="@/assets/images/face.jpeg" alt="">
         {{userName}}
       </div>
-      <div class="pull-left header-icon">
+      <div class="pull-left header-icon" @click.stop="exit">
         <svg-icon iconClass="exit" className="exit"></svg-icon>
       </div>
     </div>
@@ -29,12 +29,20 @@ export default {
      */
     const navMenuState = () => {
       // root.$store.dispatch("app/setMenuStatus", { name: "aaa" });
-      // console.log(1111111, root.$store);
       root.$store.commit("app/SET_ISCOLLAPSE");
     };
+    const exit = () => {
+      root.$store.dispatch("app/exit").then(() => {
+        root.$router.push({
+          name: "Login"
+        });
+      });
+    };
     return {
+      userName,
+      // methods
       navMenuState,
-      userName
+      exit
     };
   }
 };

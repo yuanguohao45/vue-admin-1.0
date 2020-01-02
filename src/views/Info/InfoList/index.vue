@@ -3,10 +3,10 @@
     <el-row :gutter="16">
       <el-col :span="4">
         <div class="label-wrap category">
-          <label for="">类型：</label>
+          <label for="">分类：</label>
           <div class="wrap-content">
             <el-select v-model="type" placeholder="请选择" style="width:100%;">
-              <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+              <el-option v-for="item in options.info" :key="item.id" :label="item.category_name" :value="item.id">
               </el-option>
             </el-select>
           </div>
@@ -70,9 +70,12 @@
 </template>
 
 <script>
-import { reactive, ref } from "@vue/composition-api";
+import { reactive, ref, onMounted, watch } from "@vue/composition-api";
 import { global } from "@/utils/global";
 import Dialog from "../Dialog";
+import { getCategory } from "@/api/news";
+import { common } from "@/api/common";
+
 export default {
   name: "InfoList",
   components: { Dialog },
@@ -81,24 +84,27 @@ export default {
      * 属性初始化
      */
     const { str, confirm } = global();
+    const { getInfoCategory } = common(); // category
     // watch(() => {
     //   console.log(str.value);
     // });
     // reactive
-    const options = reactive([
-      {
-        value: "1",
-        label: "国际信息"
-      },
-      {
-        value: "2",
-        label: "国内信息"
-      },
-      {
-        value: "3",
-        label: "行业信息"
-      }
-    ]);
+    const options = reactive({
+      info: [
+        {
+          value: "1",
+          label: "国际信息"
+        },
+        {
+          value: "2",
+          label: "国内信息"
+        },
+        {
+          value: "3",
+          label: "行业信息"
+        }
+      ]
+    });
     const kwOptions = reactive([
       {
         value: "id",
@@ -150,10 +156,52 @@ export default {
     const currentPage = ref(1);
     const pageSize = ref(10);
     const showDialog = ref(false);
-
+    /**
+     *  mounted
+     */
+    onMounted(() => {
+      // getInfoCategory(options, catchFnc); // 全局方法文件
+      getCategoryList();
+    });
+    /**
+     *  监听
+     */
+    // watch(
+    //   () => category.item,
+    //   value => {
+    //     options.info = value;
+    //   }
+    // );
     /**
      * 方法
      */
+    // 错误捕获
+    const catchFnc = err => {
+      root.$message.error(err);
+    };
+    // 获取分类
+    const getCategoryList = () => {
+      // vuex
+      root.$store
+        .dispatch("code/classification")
+        .then(res => {
+          if (res.resCode == 0) {
+            options.info = res.data.data;
+            return;
+          }
+          root.$message.error(res.message);
+        })
+        .catch(err => {});
+      // getCategory({})
+      //   .then(res => {
+      //     if (res.resCode == 0) {
+      //       options.info = res.data.data;
+      //       return;
+      //     }
+      //     root.$message.error(res.message);
+      //   })
+      //   .catch(err => {});
+    };
     const searchList = () => {};
     const handleSelectionChange = val => {
       console.log(multipleSelection);

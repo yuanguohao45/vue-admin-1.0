@@ -1,5 +1,12 @@
 import { Login, Register } from "@/api/login";
-import { setToken, setUserName, getToken, getUserName } from '@/utils/app'
+import {
+  setToken,
+  setUserName,
+  getToken,
+  getUserName,
+  removeToKen,
+  removeUserName
+} from "@/utils/app";
 
 // import Cookie from "cookie_js";
 // set 、get 、removue ----携带请求头 cookie 业务需求
@@ -10,14 +17,14 @@ import { setToken, setUserName, getToken, getUserName } from '@/utils/app'
 const state = {
   isCollapse: JSON.parse(sessionStorage.getItem("isCollapse")) || false,
   // isCollapse: JSON.parse(Cookie.get("isCollapse")) || false
-  token: getToken() || '',
-  userName: getUserName() || '',
+  token: getToken() || "",
+  userName: getUserName() || ""
 };
 
 const getters = {
   isCollapse: state => state.isCollapse,
   token: state => state.token,
-  userName: state => state.userName,
+  userName: state => state.userName
 };
 
 // 必须的 同步 不需要回调
@@ -46,19 +53,28 @@ const actions = {
       let btnMethod = data.model === "login" ? Login : Register;
       btnMethod(data)
         .then(res => {
-          let json = res.data
-          content.commit('SET_TOKEN', json.token)
-          content.commit('SET_USERNAME', json.username)
-          setToken(json.token)
-          setUserName(json.username)
+          let json = res.data;
+          content.commit("SET_TOKEN", json.token);
+          content.commit("SET_USERNAME", json.username);
+          setToken(json.token);
+          setUserName(json.username);
           resolve(res);
         })
         .catch(err => {
           reject(err);
         });
     });
+  },
+  exit({ commit }) {
+    return new Promise((resolve, reject) => {
+      removeToKen();
+      removeUserName();
+      commit("SET_TOKEN", "");
+      commit("SET_USERNAME", "");
+      resolve();
+    });
   }
-}
+};
 export default {
   namespaced: true,
   state,

@@ -58,6 +58,7 @@ import {
 } from "@/api/news";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import { global } from "@/utils/global";
+
 export default {
   name: "InfoCategory",
   setup(props, { root, refs }) {
