@@ -39,3 +39,23 @@ export function editCategory(data) {
     data
   });
 }
+/**
+ *  新增信息
+ */
+export function addInfo(data) {
+  return serve.request({
+    method: "post",
+    url: "/news/add/",
+    data
+  });
+}
+/**
+ *  信息列表
+ */
+export function getInfoList(data) {
+  return serve.request({
+    method: "post",
+    url: "/news/getList/",
+    data
+  });
+}

@@ -5,7 +5,7 @@
         <div class="label-wrap category">
           <label for="">分类：</label>
           <div class="wrap-content">
-            <el-select v-model="type" placeholder="请选择" style="width:100%;">
+            <el-select v-model="queryParams.categoryId" placeholder="请选择" style="width:100%;" clearable>
               <el-option v-for="item in options.info" :key="item.id" :label="item.category_name" :value="item.id">
               </el-option>
             </el-select>
@@ -16,7 +16,7 @@
         <div class="label-wrap date">
           <label for="">日期：&nbsp;&nbsp;</label>
           <div class="wrap-content">
-            <el-date-picker style="width:100%;" v-model="dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']">
+            <el-date-picker style="width:100%;" v-model="dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']" clearable>
             </el-date-picker>
           </div>
         </div>
@@ -25,7 +25,7 @@
         <div class="label-wrap key-word">
           <label for="">关键字：&nbsp;&nbsp;</label>
           <div class="wrap-content">
-            <el-select v-model="keyWord" style="width:100%;">
+            <el-select v-model="queryParams.id" style="width:100%;" clearable>
               <el-option v-for="item in kwOptions" :key="item.value" :label="item.label" :value="item.value">
               </el-option>
             </el-select>
@@ -33,7 +33,7 @@
         </div>
       </el-col>
       <el-col :span="3">
-        <el-input style="width:100%;" v-model="inputValue" placeholder="请输入内容"></el-input>
+        <el-input style="width:100%;" v-model="queryParams.title" placeholder="请输入内容" clearable></el-input>
       </el-col>
       <el-col :span="3">
         <el-button type="danger" style="width: 120px;" @click="searchList">搜索</el-button>
@@ -42,16 +42,16 @@
         <el-button type="danger" style="width: 120px;" @click="handleRow('new')">新增</el-button>
       </el-col>
     </el-row>
-    <el-table class="m-t-30" ref="multipleTable" border :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="headerStyle" :cell-style="cellStyle">
+    <el-table class="m-t-30" ref="multipleTable" v-loading="tableLoading" border :data="tableData.info" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="headerStyle" :cell-style="cellStyle">
       <el-table-column type="selection" min-width="55" align="center">
       </el-table-column>
       <el-table-column prop="title" label="标题" min-width="240" align="center" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="category" label="类别" min-width="60" align="center" show-overflow-tooltip>
+      <el-table-column prop="categoryId" label="类别" min-width="60" align="center" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="date" label="日期" min-width="120" align="center" show-overflow-tooltip>
+      <el-table-column prop="createDate" label="日期" min-width="120" align="center" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="user" label="管理员" min-width="60" align="center" show-overflow-tooltip>
+      <el-table-column prop="content" label="概况" min-width="60" align="center" show-overflow-tooltip>
       </el-table-column>
       <el-table-column label="操作" min-width="130" align="center">
         <template slot-scope="scope">
@@ -62,10 +62,10 @@
     </el-table>
     <div class="m-t-30">
       <el-button @click="delGroup" plain class="pull-left">批量删除</el-button>
-      <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="400">
+      <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="queryParams.pageNumber" :page-sizes="[10, 20, 30, 40]" :page-size="queryParams.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
       </el-pagination>
     </div>
-    <Dialog :showDialog.sync="showDialog"></Dialog>
+    <Dialog :showDialog.sync="showDialog" :classObj="classObj" @freshList="searchList"></Dialog>
   </div>
 </template>
 
@@ -73,7 +73,7 @@
 import { reactive, ref, onMounted, watch } from "@vue/composition-api";
 import { global } from "@/utils/global";
 import Dialog from "../Dialog";
-import { getCategory } from "@/api/news";
+import { getCategory, getInfoList } from "@/api/news";
 import { common } from "@/api/common";
 
 export default {
@@ -115,39 +115,26 @@ export default {
         label: "标题"
       }
     ]);
-    const tableData = reactive([
-      {
-        date: "2016-05-03",
-        user: "王小虎",
-        title: "上海市普陀区金沙江路 1518 弄",
-        category: "ID"
-      },
-      {
-        date: "2016-05-03",
-        user: "王小虎",
-        title: "上海市普陀区金沙江路 1518 弄",
-        category: "ID"
-      },
-      {
-        date: "2016-05-03",
-        user: "王小虎",
-        title: "上海市普陀区金沙江路 1518 弄",
-        category: "ID"
-      },
-      {
-        date: "2016-05-03",
-        user: "王小虎",
-        title: "上海市普陀区金沙江路 1518 弄",
-        category: "ID"
-      }
-    ]);
+    const tableData = reactive({
+      info: []
+    });
     const multipleSelection = reactive([]);
+    const classObj = reactive({ info: [] });
     const headerStyle = reactive({
       "font-size": "14px",
       "font-weight": "bold",
       color: "#344a5f"
     });
     const cellStyle = reactive({ "font-size": "14px" });
+    const queryParams = reactive({
+      categoryId: "",
+      startTime: "",
+      endTime: "",
+      title: "",
+      id: "",
+      pageNumber: 1,
+      pageSize: 10
+    });
     // ref
     const type = ref("");
     const dateRange = ref("");
@@ -156,12 +143,15 @@ export default {
     const currentPage = ref(1);
     const pageSize = ref(10);
     const showDialog = ref(false);
+    const total = ref(0);
+    const tableLoading = ref(false);
     /**
      *  mounted
      */
     onMounted(() => {
       // getInfoCategory(options, catchFnc); // 全局方法文件
       getCategoryList();
+      searchList();
     });
     /**
      *  监听
@@ -175,6 +165,23 @@ export default {
     /**
      * 方法
      */
+    // 获取信息列表
+    const getInfoData = () => {
+      tableLoading.value = true;
+      getInfoList(queryParams)
+        .then(res => {
+          tableLoading.value = false;
+          if (res.resCode == 0) {
+            tableData.info = res.data.data;
+            total.value = res.data.total;
+            return;
+          }
+          root.$message.error(res.message);
+        })
+        .catch(err => {
+          tableLoading.value = false;
+        });
+    };
     // 错误捕获
     const catchFnc = err => {
       root.$message.error(err);
@@ -185,8 +192,10 @@ export default {
       root.$store
         .dispatch("code/classification")
         .then(res => {
+          let data = res.data.data;
           if (res.resCode == 0) {
-            options.info = res.data.data;
+            options.info = data;
+            classObj.info = data;
             return;
           }
           root.$message.error(res.message);
@@ -202,9 +211,10 @@ export default {
       //   })
       //   .catch(err => {});
     };
-    const searchList = () => {};
+    const searchList = () => {
+      getInfoData();
+    };
     const handleSelectionChange = val => {
-      console.log(multipleSelection);
       multipleSelection.value = val;
     };
     const handleRow = (bol, row) => {
@@ -246,6 +256,7 @@ export default {
     };
     return {
       options,
+      classObj,
       kwOptions,
       type,
       dateRange,
@@ -262,6 +273,9 @@ export default {
       headerStyle,
       cellStyle,
       showDialog,
+      tableLoading,
+      total,
+      queryParams,
 
       searchList,
       handleSelectionChange,

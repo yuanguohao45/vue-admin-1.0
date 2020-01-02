@@ -26,3 +26,7 @@ $mainColor: #f56c6c;
     margin-left: $width + px;
   }
 }
+
+.el-table th.gutter{
+    display: table-cell!important;
+}
