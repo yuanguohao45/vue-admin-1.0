@@ -1,26 +1,28 @@
 <template>
   <div class="info-category">
-    <el-button type="danger" @click="addFirst">添加一级分类</el-button>
+    <el-button type="danger" size="mini" @click="handleCategory('add')">添加一级分类</el-button>
     <hr class="hr-e9e9e9">
     <el-row :gutter="30">
       <el-col :span="8">
         <div class="category-wrap">
           <div class="category" v-for="item in categoryList.info" :key="item.id">
+            <!-- 一级分类 -->
             <h4>
               <svg-icon iconClass="minus"></svg-icon>
               {{item.category_name}}
               <div class="pull-right btn-group">
-                <el-button size="mini" type="danger" round>编辑</el-button>
+                <el-button size="mini" type="danger" round @click="handleCategory('edit',item)">编辑</el-button>
                 <el-button size="mini" type="success" round>添加子项</el-button>
-                <el-button size="mini" round>删除</el-button>
+                <el-button size="mini" round @click="delCategory(item.id)">删除</el-button>
               </div>
             </h4>
+            <!-- 二级分类 -->
             <ul v-if="item.children">
               <li v-for="subItem in item.children" :key="subItem.id">
                 {{subItem.category_name}}
                 <div class="pull-right btn-group">
-                  <el-button size="mini" type="danger" round>编辑</el-button>
-                  <el-button size="mini" round>删除</el-button>
+                  <el-button size="mini" type="danger" round @click="handleCategory('subEdit',subItem)">编辑</el-button>
+                  <el-button size="mini" round @click="delCategory(subItem.id)">删除</el-button>
                 </div>
               </li>
             </ul>
@@ -31,15 +33,15 @@
         <h4 class="menu-title">
           一级分类编辑
         </h4>
-        <el-form label-width="120px" ref="form" class="form-wrap" :model="formLabelAlign">
+        <el-form label-width="120px" ref="form" class="form-wrap" :disabled="showForm" :model="formLabelAlign">
           <el-form-item label="一级分类名称" prop="categoryName" v-if="category">
-            <el-input class="w410" v-model="formLabelAlign.categoryName"></el-input>
+            <el-input class="w410" size="mini" v-model="formLabelAlign.categoryName"></el-input>
           </el-form-item>
           <el-form-item label="二级分类名称" prop="secCategoryName" v-if="subCategory">
-            <el-input class="w410" v-model="formLabelAlign.secCategoryName"></el-input>
+            <el-input class="w410" size="mini" v-model="formLabelAlign.secCategoryName"></el-input>
           </el-form-item>
           <el-form-item label="">
-            <el-button type="danger" @click="submit" :loading="btnLoading">确定</el-button>
+            <el-button type="danger" size="mini" @click="submit" :loading="btnLoading">确定</el-button>
           </el-form-item>
         </el-form>
       </el-col>
@@ -48,11 +50,21 @@
 </template>
 
 <script>
-import { AddFirstCategory, getCategory } from "@/api/news";
+import {
+  AddFirstCategory,
+  getCategory,
+  deleteCategory,
+  editCategory
+} from "@/api/news";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
+import { global } from "@/utils/global";
 export default {
   name: "InfoCategory",
   setup(props, { root, refs }) {
+    /**
+     *  global
+     */
+    const { confirm } = global();
     /**
      *  data
      */
@@ -60,6 +72,8 @@ export default {
     const category = ref(true);
     const subCategory = ref(true);
     const btnLoading = ref(false);
+    const showForm = ref(true);
+    const btnType = ref("");
     // reactive
     const formLabelAlign = reactive({
       categoryName: "",
@@ -67,26 +81,7 @@ export default {
     });
     // 注意不要直接reactive一个数组。。。用json转化一下
     const categoryList = reactive({
-      info: [
-        {
-          id: "12",
-          category_name: "国际信息",
-          children: [
-            { id: "12_1", category_name: "国际信息_叙利亚局势" },
-            { id: "12_2", category_name: "国际信息_叙利亚局势" },
-            { id: "12_3", category_name: "国际信息_叙利亚局势" }
-          ]
-        },
-        {
-          id: "13",
-          category_name: "国内信息",
-          children: [
-            { id: "13_1", category_name: "国内信息_二十大召开" },
-            { id: "13_2", category_name: "国内信息_二十大召开" },
-            { id: "13_3", category_name: "国内信息_二十大召开" }
-          ]
-        }
-      ]
+      info: []
     });
     /**
      *  mounted
@@ -97,31 +92,51 @@ export default {
     /**
      *  methods
      */
-    // 添加一级分类
-    const addFirst = () => {
-      category.value = true;
-      subCategory.value = false;
-    };
     // 确定
     const submit = () => {
-      if (!formLabelAlign.categoryName) {
-        root.$message.warning("名称不能为空");
+      if (!formLabelAlign.categoryName && btnType.value !== "subEdit") {
+        root.$message.warning("一级分类名称不能为空");
         return false;
       }
+      switch (btnType.value) {
+        case "add":
+          addForm(
+            AddFirstCategory({
+              categoryName: formLabelAlign.categoryName
+            })
+          );
+          break;
+        case "edit":
+          addForm(
+            editCategory({
+              categoryName: formLabelAlign.categoryName,
+              id: formLabelAlign.categoryId
+            })
+          );
+          break;
+        case "subEdit":
+          if (!formLabelAlign.secCategoryName) {
+            root.$message.warning("二级分类名称不能为空");
+            return false;
+          }
+          // addForm(editChildCategory({
+          //   categoryName: formLabelAlign.categoryName
+          // }));
+          break;
+      }
+    };
+    const addForm = fnc => {
       btnLoading.value = true;
-      AddFirstCategory({ categoryName: formLabelAlign.categoryName })
+      fnc
         .then(res => {
           btnLoading.value = false;
-          if (res.data.resCode == 0) {
-            root.$message.success(res.data.message);
+          if (res.resCode == 0) {
+            root.$message.success(res.message);
+            refs.form.resetFields();
             getCategoryList();
-            // push---节约资源
-            // categoryList.info.push(res.data.data);
             return;
           }
-          root.$message.error(res.data.message);
-          // refs.form.resetFields();
-          formLabelAlign = {};
+          root.$message.error(res.message);
         })
         .catch(err => {
           btnLoading.value = false;
@@ -131,16 +146,60 @@ export default {
     const getCategoryList = () => {
       getCategory({})
         .then(res => {
-          if (res.data.resCode == 0) {
-            categoryList.info = res.data.data.data;
+          if (res.resCode == 0) {
+            categoryList.info = res.data.data;
             return;
           }
-          root.$message.error(res.data.message);
+          root.$message.error(res.message);
         })
         .catch(err => {});
     };
+    // 删除
+    const delCategory = id => {
+      confirm({
+        content: "此操作将永久删除该分类, 是否继续?",
+        type: "warning",
+        fnc: queryDelFnc,
+        catchFnc,
+        data: { id }
+      });
+    };
+    // 删除接口
+    const queryDelFnc = id => {
+      deleteCategory({ categoryId: id })
+        .then(res => {
+          if (res.resCode == 0) {
+            root.$message.success(res.message);
+            getCategoryList();
+            return;
+          }
+          root.$message.error(res.message);
+        })
+        .catch(err => {});
+    };
+    const catchFnc = () => {
+      root.$message.info("已取消删除");
+    };
+    const handleCategory = (type, row) => {
+      refs.form.resetFields();
+      btnType.value = type;
+      if (type !== "subEdit") {
+        category.value = true;
+        subCategory.value = false;
+        if (type === "edit") {
+          formLabelAlign.categoryName = row.category_name;
+          formLabelAlign.categoryId = row.id;
+        }
+      } else {
+        category.value = false;
+        subCategory.value = true;
+      }
+      showForm.value = false;
+    };
     return {
       // ref
+      btnType,
+      showForm,
       category,
       subCategory,
       btnLoading,
@@ -148,8 +207,10 @@ export default {
       formLabelAlign,
       categoryList,
       // methods
+      catchFnc,
       submit,
-      addFirst,
+      delCategory,
+      handleCategory,
       getCategoryList
     };
   }
