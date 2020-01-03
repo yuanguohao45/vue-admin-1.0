@@ -59,3 +59,13 @@ export function getInfoList(data) {
     data
   });
 }
+/**
+ *  删除信息
+ */
+export function delInfo(data) {
+  return serve.request({
+    method: "delete",
+    url: "/news/deleteInfo/",
+    data
+  });
+}

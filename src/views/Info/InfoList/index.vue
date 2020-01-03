@@ -16,7 +16,7 @@
         <div class="label-wrap date">
           <label for="">日期：&nbsp;&nbsp;</label>
           <div class="wrap-content">
-            <el-date-picker style="width:100%;" v-model="dataObj.dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" :default-time="['12:00:00', '08:00:00']" clearable>
+            <el-date-picker style="width:100%;" v-model="dataObj.dateRange" type="datetimerange" align="right" start-placeholder="开始日期" end-placeholder="结束日期" format="yyyy-MM-dd HH:mm:ss" value-format="yyyy-MM-dd HH:mm:ss" clearable>
             </el-date-picker>
           </div>
         </div>
@@ -25,7 +25,7 @@
         <div class="label-wrap key-word">
           <label for="">关键字：&nbsp;&nbsp;</label>
           <div class="wrap-content">
-            <el-select v-model="dataObj.queryParams.id" style="width:100%;" clearable>
+            <el-select v-model="dataObj.type" style="width:100%;" @change="type_change" clearable>
               <el-option v-for="item in dataObj.kwOptions" :key="item.value" :label="item.label" :value="item.value">
               </el-option>
             </el-select>
@@ -33,13 +33,13 @@
         </div>
       </el-col>
       <el-col :span="3">
-        <el-input style="width:100%;" v-model="dataObj.queryParams.title" placeholder="请输入内容" clearable></el-input>
+        <el-input style="width:100%;" v-model="dataObj.keyWord" placeholder="请输入内容" clearable></el-input>
       </el-col>
       <el-col :span="3">
-        <el-button type="danger" style="width: 120px;" @click="searchList">搜索</el-button>
+        <el-button type="danger" style="width: 120px;" :loading="dataObj.btnLoading" @click="searchList">搜索</el-button>
       </el-col>
       <el-col :span="4" align="right">
-        <el-button type="danger" style="width: 120px;" @click="handleRow('new')">新增</el-button>
+        <el-button type="danger" style="width: 120px;" :loading="dataObj.btnLoading" @click="handleRow('new')">新增</el-button>
       </el-col>
     </el-row>
     <el-table class="m-t-30" ref="multipleTable" v-loading="dataObj.tableLoading" border :data="dataObj.tableData.info" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange" highlight-current-row :header-row-style="dataObj.headerStyle" :cell-style="dataObj.cellStyle">
@@ -47,21 +47,21 @@
       </el-table-column>
       <el-table-column prop="title" label="标题" min-width="240" align="center" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="categoryId" label="类别" min-width="60" align="center" show-overflow-tooltip>
+      <el-table-column prop="categoryId" label="类别" :formatter="categoryTounix" min-width="60" align="center" show-overflow-tooltip>
       </el-table-column>
-      <el-table-column prop="createDate" label="日期" :formatter="timeFormat" min-width="120" align="center" show-overflow-tooltip>
+      <el-table-column prop="createDate" label="日期" :formatter="datetounixMethods" min-width="120" align="center" show-overflow-tooltip>
       </el-table-column>
       <el-table-column prop="content" label="概况" min-width="60" align="center" show-overflow-tooltip>
       </el-table-column>
       <el-table-column label="操作" min-width="130" align="center">
         <template slot-scope="scope">
-          <el-button type="danger" size="mini" @click="handleRow('del',scope.row)">删除</el-button>
-          <el-button type="success" size="mini" @click="handleRow('edit',scope.row)">编辑</el-button>
+          <el-button type="danger" size="mini" :loading="dataObj.btnLoading" @click="handleRow('del',scope.row)">删除</el-button>
+          <el-button type="success" size="mini" :loading="dataObj.btnLoading" @click="handleRow('edit',scope.row)">编辑</el-button>
         </template>
       </el-table-column>
     </el-table>
     <div class="m-t-30">
-      <el-button @click="delGroup" plain class="pull-left">批量删除</el-button>
+      <el-button @click="delGroup" :loading="dataObj.btnLoading" plain class="pull-left">批量删除</el-button>
       <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="dataObj.queryParams.pageNumber" :page-sizes="[10, 20, 30, 40]" :page-size="dataObj.queryParams.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="dataObj.total">
       </el-pagination>
     </div>
@@ -73,9 +73,9 @@
 import { reactive, ref, onMounted, watch } from "@vue/composition-api";
 import { global } from "@/utils/global";
 import Dialog from "../Dialog";
-import { getCategory, getInfoList } from "@/api/news";
+import { getCategory, getInfoList, delInfo } from "@/api/news";
 import { common } from "@/api/common";
-import { timeTounix } from "@/utils/timeTounix";
+import { datetounixMethods } from "@/utils/timeTounix";
 import moment from "moment";
 
 export default {
@@ -87,26 +87,12 @@ export default {
      */
     const { str, confirm } = global();
     const { getInfoCategory } = common(); // category
-    const { datetounixMethods } = timeTounix(); // category
     /**
      *  data初始化
      */
     const dataObj = reactive({
       options: {
-        info: [
-          {
-            value: "1",
-            label: "国际信息"
-          },
-          {
-            value: "2",
-            label: "国内信息"
-          },
-          {
-            value: "3",
-            label: "行业信息"
-          }
-        ]
+        info: []
       },
       kwOptions: [
         {
@@ -141,7 +127,11 @@ export default {
       dateRange: "",
       showDialog: false,
       total: 0,
-      tableLoading: false
+      tableLoading: false,
+
+      delIds: [],
+      type: "id",
+      keyWord: ""
     });
     /**
      *  mounted
@@ -154,17 +144,45 @@ export default {
     /**
      *  监听
      */
-    // watch(
-    //   () => category.item,
-    //   value => {
-    //     options.info = value;
-    //   }
-    // );
+    watch(
+      () => dataObj.dateRange,
+      value => {
+        if (value && value.length != 0) {
+          dataObj.queryParams.startTime = value[0];
+          dataObj.queryParams.endTime = value[1];
+        } else {
+          dataObj.queryParams.startTime = "";
+          dataObj.queryParams.endTime = "";
+        }
+      }
+    );
+    watch(
+      () => dataObj.type,
+      value => {
+        if (value) {
+          dataObj.queryParams[value] = dataObj.keyWord;
+          if (value == "id") {
+            dataObj.queryParams.title = "";
+          } else {
+            dataObj.queryParams.id = "";
+          }
+        } else {
+          dataObj.queryParams.title = "";
+          dataObj.queryParams.id = "";
+        }
+      }
+    );
     /**
      *  方法
      */
+    // 类别切换
+    const type_change = val => {
+      dataObj.type = val;
+      dataObj.keyWord = "";
+    };
     // 获取信息列表
     const getInfoData = () => {
+      dataObj.queryParams[dataObj.type] = dataObj.keyWord;
       dataObj.tableLoading = true;
       getInfoList(dataObj.queryParams)
         .then(res => {
@@ -229,21 +247,47 @@ export default {
       }
     };
     const delMethod = row => {
+      dataObj.delIds = [];
+      dataObj.delIds = Array.of(row.id);
       confirm({
         content: "此操作将永久删除该文件, 是否继续?",
-        tip: "警告"
+        tip: "警告",
+        fnc: delFnc,
+        catchFnc: catchFnc,
+        data: { id: dataObj.delIds }
       });
     };
     const delGroup = () => {
+      dataObj.delIds = [];
+      dataObj.delIds = dataObj.multipleSelection.map(item => item.id);
+      if (!dataObj.delIds || dataObj.delIds.length == 0) {
+        root.$message.error("请至少选择一条数据");
+        return false;
+      }
       confirm({
         content: "即将删除全部, 是否继续?",
         type: "warning",
-        fnc: delFnc
+        fnc: delFnc,
+        catchFnc: catchFnc,
+        data: { id: dataObj.delIds }
       });
     };
 
-    const delFnc = () => {
-      alert(1);
+    const delFnc = id => {
+      dataObj.btnLoading = true;
+      delInfo({ id: id })
+        .then(res => {
+          dataObj.btnLoading = false;
+          if (res.resCode == 0) {
+            root.$message.success(res.message);
+            getInfoData();
+            return;
+          }
+          root.$message.error(res.message);
+        })
+        .catch(err => {
+          dataObj.btnLoading = false;
+        });
     };
 
     const handleSizeChange = val => {
@@ -254,12 +298,22 @@ export default {
       dataObj.queryParams.pageNumber = val;
       getInfoData();
     };
-    const timeFormat = (row, column) => {
-      let date = row[column.property];
-      if (date == undefined) {
+
+    const categoryTounix = (row, column) => {
+      if (!row.categoryId) {
         return "";
       }
-      return moment(date).format("YYYY-MM-DD HH:mm:ss");
+      // 不用花括号 可以直接返回   用了得写return
+      if (dataObj.options.info && dataObj.options.info.length != 0) {
+        let arr = dataObj.options.info.filter(
+          item => item.id == row.categoryId
+        );
+        if (arr && arr.length != 0) {
+          return arr[0].category_name;
+        } else {
+          return "";
+        }
+      }
     };
     return {
       // data
@@ -272,8 +326,10 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       handleSelectionChange,
+      type_change,
       // public
-      timeFormat
+      datetounixMethods,
+      categoryTounix
     };
   }
 };

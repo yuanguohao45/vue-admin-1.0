@@ -1,22 +1,22 @@
 <template>
-  <el-dialog class="info-dialog" title="收货地址" width="580px" :visible.sync="dialogFormVisible" @close="handleDialogCancel('form')">
-    <el-form :model="form" ref="form" :label-width="formLabelWidth">
+  <el-dialog class="info-dialog" title="收货地址" width="580px" :visible.sync="data.dialogFormVisible" @close="handleDialogCancel('form')">
+    <el-form :model="data.form" ref="form" :label-width="data.formLabelWidth">
       <el-form-item label="分类">
-        <el-select v-model="form.category" placeholder="请选择类型" clearable>
+        <el-select v-model="data.form.category" placeholder="请选择类型" clearable>
           <el-option v-for="item in classObj.info" :key="item.id" :label="item.category_name" :value="item.id">
           </el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="标题" class="m-t-30">
-        <el-input v-model="form.title" autocomplete="off" clearable></el-input>
+        <el-input v-model="data.form.title" autocomplete="off" clearable></el-input>
       </el-form-item>
       <el-form-item label="概况" class="m-t-30">
-        <el-input type="textarea" :autosize="{ minRows: 6, maxRows: 8}" v-model="form.content" autocomplete="off" clearable></el-input>
+        <el-input type="textarea" :autosize="{ minRows: 6, maxRows: 8}" v-model="data.form.content" autocomplete="off" clearable></el-input>
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
       <el-button @click="handleDialogCancel('form')">取 消</el-button>
-      <el-button type="danger" :loading="btnLoading" @click="handleDialogConfirm('form')">确 定</el-button>
+      <el-button type="danger" :loading="data.btnLoading" @click="handleDialogConfirm('form')">确 定</el-button>
     </div>
   </el-dialog>
 </template>
@@ -32,68 +32,57 @@ export default {
   },
   setup(props, { root, emit, refs }) {
     /**
-     * 属性初始化
+     *  data
      */
-    // reactive
-    const form = reactive({
-      title: "",
-      content: "",
-      category: ""
+    const data = reactive({
+      form: {
+        title: "",
+        content: "",
+        category: ""
+      },
+      btnLoading: false,
+      dialogFormVisible: false,
+      formLabelWidth: "70px"
     });
-    // ref
-    const btnLoading = ref(false);
-    const dialogFormVisible = ref(false);
-    const formLabelWidth = ref("70px");
     /**
      * watch监听
      */
-    watch(() => (dialogFormVisible.value = props.showDialog));
+    watch(() => (data.dialogFormVisible = props.showDialog));
     /**
      * 函数方法
      */
     const handleDialogCancel = formName => {
-      // $refs[formName].resetFields();
-      dialogFormVisible.value = false;
+      refs[formName].resetFields();
+      data.form = {};
+      data.dialogFormVisible = false;
       emit("update:showDialog", false);
     };
     const handleDialogConfirm = formName => {
-      // root.$refs[formName].validate(valid => {
-      //   if (valid) {
-      if (!form.category) {
+      if (!data.form.category) {
         root.$message.error("分类不能为空！");
         return false;
       }
-      btnLoading.value = true;
-      addInfo(form)
+      data.btnLoading = true;
+      addInfo(data.form)
         .then(res => {
-          btnLoading.value = false;
+          data.btnLoading = false;
           if (res.resCode == 0) {
             root.$message.success(res.message);
             handleDialogCancel(formName);
-            refs.form.resetFields();
             emit("freshList");
             return;
           }
           root.$message.error(res.message);
         })
         .catch(err => {
-          btnLoading.value = false;
+          data.btnLoading = false;
         });
-      //   } else {
-      //     return false;
-      //   }
-      // });
     };
     return {
       /**
        * data
        */
-      // reactive
-      form,
-      // ref
-      btnLoading,
-      formLabelWidth,
-      dialogFormVisible,
+      data,
       /**
        * methods
        */
