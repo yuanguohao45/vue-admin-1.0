@@ -23,12 +23,14 @@
 
 <script>
 import { reactive, ref, watch } from "@vue/composition-api";
-import { addInfo } from "@/api/news";
+import { addInfo, editInfo } from "@/api/news";
 export default {
   name: "Dialog",
   props: {
     showDialog: Boolean,
-    classObj: Object
+    classObj: Object,
+    transferObj: Object,
+    editType: Boolean
   },
   setup(props, { root, emit, refs }) {
     /**
@@ -42,12 +44,25 @@ export default {
       },
       btnLoading: false,
       dialogFormVisible: false,
-      formLabelWidth: "70px"
+      formLabelWidth: "70px",
+
+      queryMethod: () => {}
     });
     /**
      * watch监听
      */
     watch(() => (data.dialogFormVisible = props.showDialog));
+    watch(
+      () => props.transferObj,
+      value => {
+        if (value && Object.keys(value).length != 0) {
+          data.form = value;
+          data.form.category = value.categoryId;
+        } else {
+          data.form = {};
+        }
+      }
+    );
     /**
      * 函数方法
      */
@@ -62,8 +77,12 @@ export default {
         root.$message.error("分类不能为空！");
         return false;
       }
+      props.editType
+        ? (data.queryMethod = editInfo)
+        : (data.queryMethod = addInfo);
       data.btnLoading = true;
-      addInfo(data.form)
+      data
+        .queryMethod(data.form)
         .then(res => {
           data.btnLoading = false;
           if (res.resCode == 0) {

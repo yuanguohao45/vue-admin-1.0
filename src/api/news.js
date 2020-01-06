@@ -10,12 +10,32 @@ export function AddFirstCategory(data) {
   });
 }
 /**
+ *  一级分类添加
+ */
+export function AddChildrenCategory(data) {
+  return serve.request({
+    method: "post",
+    url: "/news/addChildrenCategory/",
+    data
+  });
+}
+/**
  *  获取分类
  */
 export function getCategory(data) {
   return serve.request({
     method: "get",
     url: "/news/getCategory/",
+    data
+  });
+}
+/**
+ *  获取分类(有子分类)
+ */
+export function getCategoryAll(data) {
+  return serve.request({
+    method: "get",
+    url: "/news/getCategoryAll/",
     data
   });
 }
@@ -30,12 +50,22 @@ export function deleteCategory(data) {
   });
 }
 /**
- *  删除分类
+ *  编辑分类
  */
 export function editCategory(data) {
   return serve.request({
     method: "post",
     url: "/news/editCategory/",
+    data
+  });
+}
+/**
+ *  编辑子类
+ */
+export function editChildrenCategory(data) {
+  return serve.request({
+    method: "post",
+    url: "/news/editChildrenCategory/",
     data
   });
 }
@@ -46,6 +76,16 @@ export function addInfo(data) {
   return serve.request({
     method: "post",
     url: "/news/add/",
+    data
+  });
+}
+/**
+ *  编辑信息
+ */
+export function editInfo(data) {
+  return serve.request({
+    method: "post",
+    url: "/news/editInfo/",
     data
   });
 }

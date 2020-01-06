@@ -65,7 +65,7 @@
       <el-pagination class="pull-right" background @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="dataObj.queryParams.pageNumber" :page-sizes="[10, 20, 30, 40]" :page-size="dataObj.queryParams.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="dataObj.total">
       </el-pagination>
     </div>
-    <Dialog :showDialog.sync="dataObj.showDialog" :classObj="dataObj.classObj" @freshList="searchList"></Dialog>
+    <Dialog :showDialog.sync="dataObj.showDialog" :classObj="dataObj.classObj" :editType="dataObj.editType" :transferObj="dataObj.transferObj" @freshList="searchList"></Dialog>
   </div>
 </template>
 
@@ -131,7 +131,10 @@ export default {
 
       delIds: [],
       type: "id",
-      keyWord: ""
+      keyWord: "",
+
+      transferObj: {},
+      editType: false
     });
     /**
      *  mounted
@@ -236,9 +239,12 @@ export default {
     const handleRow = (bol, row) => {
       switch (bol) {
         case "new":
+          dataObj.editType = false;
           dataObj.showDialog = true;
           break;
         case "edit":
+          dataObj.transferObj = row;
+          dataObj.editType = true;
           dataObj.showDialog = true;
           break;
         case "del":

@@ -8,16 +8,19 @@
           <div class="category" v-for="item in categoryList.info" :key="item.id">
             <!-- 一级分类 -->
             <h4>
-              <svg-icon iconClass="minus"></svg-icon>
+              <div class="v-line" v-if="item.children && item.children.length!=0" @click="handleSvg(item)">
+                <svg-icon :iconClass="showType?'plus':'minus'"></svg-icon>
+              </div>
+              <svg-icon v-else iconClass="minus"></svg-icon>
               {{item.category_name}}
               <div class="pull-right btn-group">
                 <el-button size="mini" type="danger" round @click="handleCategory('edit',item)">编辑</el-button>
-                <el-button size="mini" type="success" round>添加子项</el-button>
+                <el-button size="mini" type="success" round @click="handleCategory('subAdd',item)">添加子项</el-button>
                 <el-button size="mini" round @click="delCategory(item.id)">删除</el-button>
               </div>
             </h4>
             <!-- 二级分类 -->
-            <ul v-if="item.children">
+            <ul v-show="item.children  && item.children.length!=0 && !showType">
               <li v-for="subItem in item.children" :key="subItem.id">
                 {{subItem.category_name}}
                 <div class="pull-right btn-group">
@@ -35,7 +38,7 @@
         </h4>
         <el-form label-width="120px" ref="form" class="form-wrap" :disabled="showForm" :model="formLabelAlign">
           <el-form-item label="一级分类名称" prop="categoryName" v-if="category">
-            <el-input class="w410" size="mini" v-model="formLabelAlign.categoryName"></el-input>
+            <el-input class="w410" size="mini" :disabled="showCategory" v-model="formLabelAlign.categoryName"></el-input>
           </el-form-item>
           <el-form-item label="二级分类名称" prop="secCategoryName" v-if="subCategory">
             <el-input class="w410" size="mini" v-model="formLabelAlign.secCategoryName"></el-input>
@@ -54,7 +57,10 @@ import {
   AddFirstCategory,
   getCategory,
   deleteCategory,
-  editCategory
+  editCategory,
+  getCategoryAll,
+  AddChildrenCategory,
+  editChildrenCategory
 } from "@/api/news";
 import { reactive, ref, onMounted, toRefs } from "@vue/composition-api";
 import { global } from "@/utils/global";
@@ -70,11 +76,14 @@ export default {
      *  data
      */
     // ref
+    const showType = ref(true);
     const category = ref(true);
+    const showCategory = ref(false);
     const subCategory = ref(true);
     const btnLoading = ref(false);
     const showForm = ref(true);
     const btnType = ref("");
+    const parentId = ref("");
     // reactive
     const formLabelAlign = reactive({
       categoryName: "",
@@ -95,15 +104,34 @@ export default {
      */
     // 确定
     const submit = () => {
-      if (!formLabelAlign.categoryName && btnType.value !== "subEdit") {
+      if (
+        !formLabelAlign.categoryName &&
+        (btnType.value === "add" || btnType.value === "edit")
+      ) {
         root.$message.warning("一级分类名称不能为空");
+        return false;
+      }
+      if (
+        !formLabelAlign.secCategoryName &&
+        (btnType.value === "subAdd" || btnType.value === "subEdit")
+      ) {
+        root.$message.warning("二级分类名称不能为空");
         return false;
       }
       switch (btnType.value) {
         case "add":
           addForm(
             AddFirstCategory({
-              categoryName: formLabelAlign.categoryName
+              categoryName: formLabelAlign.categoryName,
+              parentId: row.id
+            })
+          );
+          break;
+        case "subAdd":
+          addForm(
+            AddChildrenCategory({
+              categoryName: formLabelAlign.secCategoryName,
+              parentId: parentId.value
             })
           );
           break;
@@ -116,13 +144,12 @@ export default {
           );
           break;
         case "subEdit":
-          if (!formLabelAlign.secCategoryName) {
-            root.$message.warning("二级分类名称不能为空");
-            return false;
-          }
-          // addForm(editChildCategory({
-          //   categoryName: formLabelAlign.categoryName
-          // }));
+          addForm(
+            editChildrenCategory({
+              categoryName: formLabelAlign.secCategoryName,
+              parentId: parentId.value
+            })
+          );
           break;
       }
     };
@@ -133,7 +160,9 @@ export default {
           btnLoading.value = false;
           if (res.resCode == 0) {
             root.$message.success(res.message);
-            refs.form.resetFields();
+            btnType.value === "subAdd" || btnType.value === "subEdit"
+              ? (formLabelAlign.secCategoryName = "")
+              : refs.form.resetFields();
             getCategoryList();
             return;
           }
@@ -145,10 +174,10 @@ export default {
     };
     // 获取分类
     const getCategoryList = () => {
-      getCategory({})
+      getCategoryAll({})
         .then(res => {
           if (res.resCode == 0) {
-            categoryList.info = res.data.data;
+            categoryList.info = res.data;
             return;
           }
           root.$message.error(res.message);
@@ -181,24 +210,40 @@ export default {
     const catchFnc = () => {
       root.$message.info("已取消删除");
     };
+    // 子项添加
     const handleCategory = (type, row) => {
       refs.form.resetFields();
       btnType.value = type;
       if (type !== "subEdit") {
         category.value = true;
         subCategory.value = false;
-        if (type === "edit") {
+        if (type === "edit" || type === "subAdd") {
           formLabelAlign.categoryName = row.category_name;
           formLabelAlign.categoryId = row.id;
         }
+        if (type === "subAdd") {
+          category.value = true;
+          showCategory.value = true;
+          subCategory.value = true;
+        }
       } else {
-        category.value = false;
+        formLabelAlign.categoryName = row.category_name;
+        category.value = true;
+        showCategory.value = true;
         subCategory.value = true;
       }
+      parentId.value = row.id;
       showForm.value = false;
     };
+    const handleSvg = row => {
+      showType.value = !showType.value;
+    };
+
     return {
       // ref
+      showType,
+      parentId,
+      showCategory,
       btnType,
       showForm,
       category,
@@ -212,7 +257,8 @@ export default {
       submit,
       delCategory,
       handleCategory,
-      getCategoryList
+      getCategoryList,
+      handleSvg
     };
   }
 };
